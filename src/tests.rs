@@ -106,20 +106,22 @@ fn test_bundle_parameters(){
     assert_that(&params.len()).is_equal_to(&3);
 
     let arg3 = params.get(&"arg3".to_string());
+
     assert!(arg3.is_some());
-    assert!(arg3.unwrap().parameter_type == "string");
+    assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
     
     let apply = &arg3.unwrap().apply_to;
     assert!(apply.is_some());
     
     let abc = json!("abc");
     let dv = &arg3.unwrap().default_value;
-    assert!(dv == &Some(abc));
-
+    assert_that(dv).is_equal_to(&Some(abc));
+    
     let apply_to = &arg3.unwrap().apply_to;
-    assert!(apply_to == &Some(vec!["uninstall".to_string()]));
-
+    assert_that(apply_to).is_equal_to(&Some(vec!["uninstall".to_string()]));
     assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
+
+    //assert_that(&bun.parameters.unwrap().get(&"arg2".to_string()).unwrap().parameter_type).is_equal_to("int".to_string())
 }
 
 #[test]
