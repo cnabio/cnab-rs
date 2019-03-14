@@ -77,7 +77,7 @@ fn test_bundle_parameters(){
                 "type": "int"
             },
             "arg3": {
-                "apply_to": ["delete"],
+                "applyTo": ["uninstall"],
                 "destination": {
                     "env": "LETTERS",
                     "path": "/path/to/abc"
@@ -105,9 +105,21 @@ fn test_bundle_parameters(){
     let params = bun.parameters.unwrap();
     assert_that(&params.len()).is_equal_to(&3);
 
-    let arg3 = params.get(&"arg3".to_string()).unwrap();
-    //assert_that(&arg3.apply_to.unwrap().len()).is_equal_to(&1);
-    assert_that(&arg3.parameter_type).is_equal_to("string".to_string());
+    let arg3 = params.get(&"arg3".to_string());
+    assert!(arg3.is_some());
+    assert!(arg3.unwrap().parameter_type == "string");
+    
+    let apply = &arg3.unwrap().apply_to;
+    assert!(apply.is_some());
+    
+    let abc = json!("abc");
+    let dv = &arg3.unwrap().default_value;
+    assert!(dv == &Some(abc));
+
+    let apply_to = &arg3.unwrap().apply_to;
+    assert!(apply_to == &Some(vec!["uninstall".to_string()]));
+
+    assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
 }
 
 #[test]
