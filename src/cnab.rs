@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::fs::File;
+use std::path::Path;
 
 /// Bundle implements a CNAB bundle descriptor
 ///
@@ -18,7 +20,7 @@ pub struct Bundle {
     /// The list of configurable credentials.
     ///
     /// Credentials are injected into the bundle's invocation image at startup time.
-    pub credentials: Option<Vec<Credential>>,
+    pub credentials: Option<HashMap<String, Credential>>,
     /// This field allows for additional data to described in the bundle.
     ///
     /// This data should be stored in key/value pairs, where the value is undefined by
@@ -58,6 +60,12 @@ impl Bundle {
     ///fn new(name: String, version: String) -> Bundle {}
     pub fn from_string(json_data: &str) -> Result<Bundle, serde_json::Error> {
         let res: Bundle = serde_json::from_str(json_data)?;
+        Ok(res)
+    }
+
+    pub fn from_file(file_path: &str) -> Result<Bundle, serde_json::Error> {
+        let file = File::open(Path::new(&file_path)).expect("file not found");
+        let res: Bundle = serde_json::from_reader(file)?;
         Ok(res)
     }
 }
