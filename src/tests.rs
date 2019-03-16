@@ -1,18 +1,20 @@
 extern crate spectral;
 
+use crate::cnab::Bundle;
+use serde_json::*;
 use spectral::prelude::*;
 
-use super::*;
-
 #[test]
-fn test_bundle_simple(){
+fn test_bundle_simple() {
     // Testing that we can build one with only the minimal fields.
-    let res = Bundle::from_string(r#"{
+    let res = Bundle::from_string(
+        r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
         "version": "1.0.0"
-    }"#);
+    }"#,
+    );
 
     let bun = res.unwrap();
 
@@ -23,15 +25,17 @@ fn test_bundle_simple(){
 }
 
 #[test]
-fn test_bundle_keywords(){
+fn test_bundle_keywords() {
     // Testing that we can build one with only the minimal fields.
-    let res = Bundle::from_string(r#"{
+    let res = Bundle::from_string(
+        r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
         "version": "1.0.0",
         "keywords": ["a", "b", "c"]
-    }"#);
+    }"#,
+    );
 
     let bun = res.unwrap();
 
@@ -43,9 +47,10 @@ fn test_bundle_keywords(){
 }
 
 #[test]
-fn test_bundle_parameters(){
+fn test_bundle_parameters() {
     // Testing that we can build one with only the minimal fields.
-    let res = Bundle::from_string(r#"{
+    let res = Bundle::from_string(
+        r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
@@ -94,7 +99,8 @@ fn test_bundle_parameters(){
                 "type": "string"
             }
         }
-    }"#);
+    }"#,
+    );
 
     let bun = res.unwrap();
 
@@ -109,14 +115,14 @@ fn test_bundle_parameters(){
 
     assert!(arg3.is_some());
     assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
-    
+
     let apply = &arg3.unwrap().apply_to;
     assert!(apply.is_some());
-    
+
     let abc = json!("abc");
     let dv = &arg3.unwrap().default_value;
     assert_that(dv).is_equal_to(&Some(abc));
-    
+
     let apply_to = &arg3.unwrap().apply_to;
     assert_that(apply_to).is_equal_to(&Some(vec!["uninstall".to_string()]));
     assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
@@ -125,9 +131,10 @@ fn test_bundle_parameters(){
 }
 
 #[test]
-fn test_bundle_images(){
+fn test_bundle_images() {
     // Testing that we can build one with only the minimal fields.
-    let res = Bundle::from_string(r#"{
+    let res = Bundle::from_string(
+        r#"{
         "name": "aristotle",
         "images": {
             "web": {
@@ -156,7 +163,8 @@ fn test_bundle_images(){
         "schemaVersion": "1.0-WD",
         "version": "1.0.0",
         "labels": ["hello", "world"]
-    }"#);
+    }"#,
+    );
 
     let bun = res.unwrap();
 
