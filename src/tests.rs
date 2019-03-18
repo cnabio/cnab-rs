@@ -53,7 +53,6 @@ fn test_bundle_keywords() {
 
 #[test]
 fn test_bundle_parameters() {
-    // Testing that we can build one with only the minimal fields.
     let res = Bundle::from_string(
         r#"{
         "name": "aristotle",
@@ -195,4 +194,15 @@ fn test_bundle_images() {
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
     assert_that(&bun.version).is_equal_to("1.0.0".to_string());
     assert_that(&bun.invocation_images.len()).is_equal_to(&1);
+}
+
+#[test]
+fn test_bundle_deserialize() {
+    let bun = Bundle::from_file("testdata/bundle.json").unwrap();
+
+    assert_that(&bun.name).is_equal_to("helloworld".to_string());
+    assert_that(&bun.schema_version).is_equal_to("v1.0.0-WD".to_string());
+    assert_that(&bun.version).is_equal_to("0.1.2".to_string());
+    assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
+    assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
 }
