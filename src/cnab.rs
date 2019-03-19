@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::fs::File;
+use std::path::Path;
 
 /// Bundle implements a CNAB bundle descriptor
 ///
@@ -58,6 +60,12 @@ impl<'a> Bundle<'a> {
     ///fn new(name: String, version: String) -> Bundle {}
     pub fn from_string(json_data: &'a str) -> Result<Bundle<'a>, serde_json::Error> {
         let res: Bundle = serde_json::from_str(json_data)?;
+        Ok(res)
+    }
+
+    pub fn from_file(file_path: &str) -> Result<Bundle, serde_json::Error> {
+        let file = File::open(Path::new(&file_path)).expect("file not found");
+        let res: Bundle = serde_json::from_reader(file)?;
         Ok(res)
     }
 }
