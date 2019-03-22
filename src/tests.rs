@@ -206,3 +206,9 @@ fn test_bundle_deserialize() {
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
 }
+
+#[test]
+fn test_bundle_from_file_not_found() {
+    let bun = Bundle::from_file("no/such/file.json");
+    assert_that(&bun.is_err()).is_true();
+}

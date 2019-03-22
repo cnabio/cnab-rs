@@ -63,10 +63,34 @@ impl Bundle {
         Ok(res)
     }
 
-    pub fn from_file(file_path: &str) -> Result<Bundle, serde_json::Error> {
-        let file = File::open(Path::new(&file_path)).expect("file not found");
-        let res: Bundle = serde_json::from_reader(file)?;
+    pub fn from_file(file_path: &str) -> Result<Bundle, BundleParseError> {
+        //let file = File::open(Path::new(&file_path)).expect("file not found");
+        let file = File::open(Path::new(&file_path))?;
+        let buf = std::io::BufReader::new(file);
+        let res: Bundle = serde_json::from_reader(buf)?;
         Ok(res)
+    }
+}
+
+/// Represents an error parsing a bundle descriptor
+///
+/// This captures the various errors that may bubble up when a bundle descriptor
+/// fails to parse.
+#[derive(Debug)]
+pub enum BundleParseError {
+    SerdeJSONError(serde_json::Error),
+    IoError(std::io::Error)
+}
+
+impl From<std::io::Error> for BundleParseError {
+    fn from(error: std::io::Error) -> Self {
+        BundleParseError::IoError(error)
+    }
+}
+
+impl From<serde_json::Error> for BundleParseError {
+    fn from(error: serde_json::Error) -> Self{
+        BundleParseError::SerdeJSONError(error)
     }
 }
 
