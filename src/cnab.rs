@@ -11,62 +11,86 @@ use std::path::Path;
 /// The fields here are in canonical order.
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Bundle<'a> {
+pub struct Bundle {
     /// The list of additional actions that this bundle can perform.
     ///
     /// 'install', 'upgrade', and 'uninstall' are default actions, but additional actions
     /// may be defined here.
-    pub actions: Option<HashMap<&'a str, Action<'a>>>,
+    pub actions: Option<HashMap<String, Action>>,
     /// The list of configurable credentials.
     ///
     /// Credentials are injected into the bundle's invocation image at startup time.
-    pub credentials: Option<Vec<Credential<'a>>>,
+    pub credentials: Option<HashMap<String, Credential>>,
     /// This field allows for additional data to described in the bundle.
     ///
     /// This data should be stored in key/value pairs, where the value is undefined by
     /// the specification (but must be representable as JSON).
-    pub custom: Option<HashMap<&'a str, serde_json::Value>>,
+    pub custom: Option<HashMap<String, serde_json::Value>>,
     /// description is a short description of this bundle
-    pub description: Option<&'a str>,
+    pub description: Option<String>,
     /// The list of images that comprise this bundle.
     ///
     /// Each image here is considered a constituent of the application described by this
     /// bundle.
-    pub images: Option<HashMap<&'a str, Image<'a>>>,
+    pub images: Option<HashMap<String, Image>>,
     /// inovcation_images is the list of available bootstrapping images for this bundle
     ///
     /// Only one ought to be executed.
-    pub invocation_images: Vec<Image<'a>>,
+    pub invocation_images: Vec<Image>,
     /// keywords is a list of keywords describing this bundle
-    pub keywords: Option<Vec<&'a str>>,
+    pub keywords: Option<Vec<String>>,
     /// license is the license of this bundle
-    pub license: Option<&'a str>,
+    pub license: Option<String>,
     /// maintainers is a list of maintainers responsible for this bundle
-    pub maintainers: Option<Vec<Maintainer<'a>>>,
+    pub maintainers: Option<Vec<Maintainer>>,
     /// name is the name of the bundle
-    pub name: &'a str,
+    pub name: String,
     /// The collection of parameters that can be passed into this bundle.
     ///
     /// Parameters can be injected into a bundle during startup time.
-    pub parameters: Option<HashMap<&'a str, Parameter<'a>>>,
+    pub parameters: Option<HashMap<String, Parameter>>,
     /// schema_version is the version of the CNAB specification used to describe this
-    pub schema_version: &'a str,
+    pub schema_version: String,
     /// version is the version of the bundle
-    pub version: &'a str,
+    pub version: String,
 }
 
 /// Represents a bundle.
-impl<'a> Bundle<'a> {
+impl Bundle {
     ///fn new(name: String, version: String) -> Bundle {}
-    pub fn from_string(json_data: &'a str) -> Result<Bundle<'a>, serde_json::Error> {
+    pub fn from_string(json_data: &str) -> Result<Bundle, BundleParseError> {
         let res: Bundle = serde_json::from_str(json_data)?;
         Ok(res)
     }
 
-    pub fn from_file(file_path: &str) -> Result<Bundle, serde_json::Error> {
-        let file = File::open(Path::new(&file_path)).expect("file not found");
-        let res: Bundle = serde_json::from_reader(file)?;
+    pub fn from_file(file_path: &str) -> Result<Bundle, BundleParseError> {
+        //let file = File::open(Path::new(&file_path)).expect("file not found");
+        let file = File::open(Path::new(&file_path))?;
+        let buf = std::io::BufReader::new(file);
+        let res: Bundle = serde_json::from_reader(buf)?;
         Ok(res)
+    }
+}
+
+/// Represents an error parsing a bundle descriptor
+///
+/// This captures the various errors that may bubble up when a bundle descriptor
+/// fails to parse.
+#[derive(Debug)]
+pub enum BundleParseError {
+    SerdeJSONError(serde_json::Error),
+    IoError(std::io::Error)
+}
+
+impl From<std::io::Error> for BundleParseError {
+    fn from(error: std::io::Error) -> Self {
+        BundleParseError::IoError(error)
+    }
+}
+
+impl From<serde_json::Error> for BundleParseError {
+    fn from(error: serde_json::Error) -> Self{
+        BundleParseError::SerdeJSONError(error)
     }
 }
 
@@ -74,13 +98,13 @@ impl<'a> Bundle<'a> {
 ///
 /// The name field is required, though the format of its value is unspecified.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Maintainer<'a> {
+pub struct Maintainer {
     /// The email address of the maintainer
-    pub email: Option<&'a str>,
+    pub email: Option<String>,
     /// The name of the maintainer
-    pub name: &'a str,
+    pub name: String,
     /// A URL with more information about the maintainer
-    pub url: Option<&'a str>,
+    pub url: Option<String>,
 }
 
 /// Image describes a CNAB image.
@@ -88,43 +112,43 @@ pub struct Maintainer<'a> {
 /// Both invocation images and regular images can be described using this object.
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Image<'a> {
+pub struct Image {
     /// A digest to be used to verify the integrity of the image
-    pub digest: Option<&'a str>,
+    pub digest: Option<String>,
     /// The image, as a string of the form REPO/NAME:TAG@SHA
-    pub image: &'a str,
+    pub image: String,
     /// The type of image. Typically, this is treated as an OCI Image
-    pub image_type: Option<&'a str>,
+    pub image_type: Option<String>,
     /// The media type of the image
-    pub media_type: Option<&'a str>,
+    pub media_type: Option<String>,
     /// The platform this image may be deployed on
-    pub platform: Option<Platform<'a>>,
+    pub platform: Option<Platform>,
     /// The size in bytes of the image
     pub size: Option<i64>,
 }
 
 /// Platform defines a platform as a machine architecture plus and operating system
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Platform<'a> {
+pub struct Platform {
     /// The architecture
     ///
     /// Typical values are amd64, i386, and arm64
-    pub arch: Option<&'a str>,
+    pub arch: Option<String>,
     /// The operating system.
     ///
     /// Typical values are darwin, windows, and linux
-    pub os: Option<&'a str>,
+    pub os: Option<String>,
 }
 
 /// Credential describes a particular credential that may be injected into a bundle
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Credential<'a> {
+pub struct Credential {
     /// The description of this credential
-    pub description: Option<&'a str>,
+    pub description: Option<String>,
     /// The name of the environment variable into which the value will be placed
-    pub env: Option<&'a str>,
+    pub env: Option<String>,
     /// The fully qualified path into which the value will be placed
-    pub path: Option<&'a str>,
+    pub path: Option<String>,
 }
 
 /// Parameter describes a parameter that will be put into the invocation image
@@ -132,13 +156,13 @@ pub struct Credential<'a> {
 /// Paramters are injected into the invocation image at startup time
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Parameter<'a> {
+pub struct Parameter {
     /// The actions to which this parameter applies.
     ///
     /// If unset, this parameter will be applied to all actions.
-    pub apply_to: Option<Vec<&'a str>>,
+    pub apply_to: Option<Vec<String>>,
     /// The location where this parameter will be injected in the invocation image
-    pub destination: Destination<'a>,
+    pub destination: Destination,
     /// This parameter's default value
     pub default_value: Option<serde_json::Value>,
 
@@ -163,7 +187,7 @@ pub struct Parameter<'a> {
     /// If unspecified, no max is applied.
     pub max_length: Option<i64>,
     /// Additional parameter information
-    pub metadata: Option<Metadata<'a>>,
+    pub metadata: Option<Metadata>,
     /// The minimum integer value
     ///
     /// If unspecified, the minimum 64-bit integer value is applied
@@ -173,7 +197,7 @@ pub struct Parameter<'a> {
     /// A regular expression (as defined in ECMAScript)
     ///
     /// If it is not matched, a string parameter value will be rejected
-    pub pattern: Option<&'a str>,
+    pub pattern: Option<String>,
     /// Indicate whether this parameter is required
     ///
     /// Default is false.
@@ -181,7 +205,7 @@ pub struct Parameter<'a> {
     pub required: bool,
     /// This describes the underlying type of the parameter (string, int...)
     #[serde(rename = "type")]
-    pub parameter_type: &'a str, // Should be Enum; alphabetically, this is 'type'
+    pub parameter_type: String, // Should be Enum; alphabetically, this is 'type'
 }
 
 /// An Action is a custom action in an invocation image.
@@ -189,9 +213,9 @@ pub struct Parameter<'a> {
 /// For example, an invocation image may provide help text by creating a 'help'
 /// action that, when triggered, prints help text to STDOUT.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Action<'a> {
+pub struct Action {
     /// Describes what this action does
-    pub description: Option<&'a str>,
+    pub description: Option<String>,
     /// If true, this action modifies the deployment, and should be tracked as a release.
     #[serde(default)]
     pub modifies: bool,
@@ -205,9 +229,9 @@ pub struct Action<'a> {
 
 /// Describe a parameter
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Metadata<'a> {
+pub struct Metadata {
     /// A description of a parameter
-    pub description: Option<&'a str>,
+    pub description: Option<String>,
 }
 
 /// Destination describes where, in the invocation image, a particular paramter value should be
@@ -217,9 +241,9 @@ pub struct Metadata<'a> {
 /// a particular location on the filesystem (`path`). This is a non-exclusive or, meaining
 /// that the same paramter can be written to both an env var and a path.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Destination<'a> {
+pub struct Destination {
     /// The name of the destination environment variable
-    pub env: Option<&'a str>,
+    pub env: Option<String>,
     /// The fully qualified path to the destination file
-    pub path: Option<&'a str>,
+    pub path: Option<String>,
 }

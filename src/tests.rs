@@ -18,9 +18,9 @@ fn test_bundle_simple() {
 
     let bun = res.unwrap();
 
-    assert_that(&bun.name).is_equal_to("aristotle");
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD");
-    assert_that(&bun.version).is_equal_to("1.0.0");
+    assert_that(&bun.name).is_equal_to("aristotle".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 }
 
@@ -39,16 +39,16 @@ fn test_bundle_keywords() {
 
     let bun = res.unwrap();
 
-    assert_that(&bun.name).is_equal_to("aristotle");
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD");
-    assert_that(&bun.version).is_equal_to("1.0.0");
+    assert_that(&bun.name).is_equal_to("aristotle".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 
     let kw = &bun.keywords.unwrap();
     assert_that(&kw.len()).is_equal_to(&3);
-    assert_that(&kw[0]).is_equal_to("a");
-    assert_that(&kw[1]).is_equal_to("b");
-    assert_that(&kw[2]).is_equal_to("c");
+    assert_that(&kw[0]).is_equal_to("a".to_string());
+    assert_that(&kw[1]).is_equal_to("b".to_string());
+    assert_that(&kw[2]).is_equal_to("c".to_string());
 }
 
 #[test]
@@ -108,27 +108,27 @@ fn test_bundle_parameters() {
 
     let bun = res.unwrap();
 
-    assert_that(&bun.name).is_equal_to("aristotle");
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD");
-    assert_that(&bun.version).is_equal_to("1.0.0");
+    assert_that(&bun.name).is_equal_to("aristotle".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
 
     let params = bun.parameters.unwrap();
     assert_that(&params.len()).is_equal_to(&3);
 
-    let arg3 = params.get(&"arg3");
+    let arg3 = params.get(&"arg3".to_string());
 
     assert!(arg3.is_some());
-    assert_that(&arg3.unwrap().parameter_type).is_equal_to("string");
+    assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
 
     let apply = &arg3.unwrap().apply_to;
     assert!(apply.is_some());
 
     let dest = &arg3.unwrap().destination;
     let env = &dest.env;
-    assert_that(&env).is_equal_to(&Some("LETTERS"));
+    assert_that(&env).is_equal_to(&Some("LETTERS".to_string()));
 
     let path = &dest.path;
-    assert_that(path).is_equal_to(&Some("/path/to/abc"));
+    assert_that(path).is_equal_to(&Some("/path/to/abc".to_string()));
 
     let abc = json!("abc");
     let dv = &arg3.unwrap().default_value;
@@ -139,17 +139,17 @@ fn test_bundle_parameters() {
 
     assert_that(&arg3.as_ref().unwrap().min_length.unwrap()).is_equal_to(1);
     assert_that(&arg3.as_ref().unwrap().max_length.unwrap()).is_equal_to(5);
-    assert_that(&arg3.as_ref().unwrap().pattern).is_equal_to(&Some("[a-z]+"));
+    assert_that(&arg3.as_ref().unwrap().pattern).is_equal_to(&Some("[a-z]+".to_string()));
     assert_that(&arg3.unwrap().required).is_equal_to(true);
 
     let meta = &arg3.unwrap().metadata;
     assert_that(&meta.is_some()).is_equal_to(true);
 
-    assert_that(&meta.as_ref().unwrap().description.as_ref().unwrap()).is_equal_to(&"a parameter");
+    assert_that(&meta.as_ref().unwrap().description.as_ref().unwrap()).is_equal_to(&"a parameter".to_string());
 
     let apply_to = &arg3.unwrap().apply_to;
-    assert_that(apply_to).is_equal_to(&Some(vec!["uninstall"]));
-    assert_that(&arg3.unwrap().parameter_type).is_equal_to("string");
+    assert_that(apply_to).is_equal_to(&Some(vec!["uninstall".to_string()]));
+    assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
 }
 
 #[test]
@@ -190,9 +190,9 @@ fn test_bundle_images() {
 
     let bun = res.unwrap();
 
-    assert_that(&bun.name).is_equal_to("aristotle");
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD");
-    assert_that(&bun.version).is_equal_to("1.0.0");
+    assert_that(&bun.name).is_equal_to("aristotle".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
     assert_that(&bun.invocation_images.len()).is_equal_to(&1);
 }
 
@@ -205,4 +205,10 @@ fn test_bundle_deserialize() {
     assert_that(&bun.version).is_equal_to("0.1.2".to_string());
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
+}
+
+#[test]
+fn test_bundle_from_file_not_found() {
+    let bun = Bundle::from_file("no/such/file.json");
+    assert_that(&bun.is_err()).is_true();
 }
