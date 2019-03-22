@@ -5,8 +5,8 @@ use serde_json::*;
 use spectral::prelude::*;
 
 #[test]
+// Testing that we can build one with only the minimal fields.
 fn test_bundle_simple() {
-    // Testing that we can build one with only the minimal fields.
     let res = Bundle::from_string(
         r#"{
         "name": "aristotle",
@@ -24,9 +24,9 @@ fn test_bundle_simple() {
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 }
 
+// Test labels
 #[test]
 fn test_bundle_keywords() {
-    // Testing that we can build one with only the minimal fields.
     let res = Bundle::from_string(
         r#"{
         "name": "aristotle",
@@ -51,6 +51,7 @@ fn test_bundle_keywords() {
     assert_that(&kw[2]).is_equal_to("c".to_string());
 }
 
+// Test parameters
 #[test]
 fn test_bundle_parameters() {
     let res = Bundle::from_string(
@@ -197,9 +198,36 @@ fn test_bundle_parameters() {
     }
 }
 
+// Test custom data
+#[test]
+fn test_bundle_custom() {
+    let res = Bundle::from_string(
+        r#"{
+        "name": "aristotle",
+        "invocationImages": [],
+        "schemaVersion": "1.0.0",
+        "version": "1.0.0",
+        "custom": {
+          "com.example.praxis": {
+            "techne": true
+          }
+        }
+    }"#,
+    );
+
+    assert_that(&res).is_ok();
+
+    let bun = res.unwrap();
+    assert_that(&bun.custom).is_some();
+    let val: Option<&serde_json::Value> = bun.custom.as_ref().unwrap().get(&"com.example.praxis".to_string());
+    // Lookup docs on Value when I'm online again.
+    assert_that(&val).is_some(); // .map(|v| v.get("foo").is_some() );
+
+}
+
+// Test credentials
 #[test]
 fn test_bundle_credentials() {
-    // Testing that we can build one with only the minimal fields.
     let res = Bundle::from_string(
         r#"{
         "name": "aristotle",
@@ -244,6 +272,7 @@ fn test_bundle_credentials() {
     assert_that(&third.path).is_some();
 }
 
+// Test invocation images and regular images
 #[test]
 fn test_bundle_images() {
     // Testing that we can build one with only the minimal fields.
@@ -285,13 +314,46 @@ fn test_bundle_images() {
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
     assert_that(&bun.version).is_equal_to("1.0.0".to_string());
-    assert_that(&bun.invocation_images.len()).is_equal_to(&1);
 
-    let imgs = &bun.invocation_images;
-    assert_that(&imgs[0].image).is_equal_to("nginx:latest".to_string());
-    assert_that(&imgs[0].image_type).is_equal_to(Some("oci".to_string()));
+    // Check that all of the fields unmarshaled correctly.
+    let invo_imgs = &bun.invocation_images;
+    assert_that(&invo_imgs.len()).is_equal_to(1);
+    {
+        let ii1 = &invo_imgs[0];
+        assert_that(&ii1.image).is_equal_to("nginx:latest".to_string());
+        assert_that(&ii1.image_type).is_equal_to(Some("oci".to_string()));
+        assert_that(&ii1.media_type).is_equal_to(Some("application/x-image-thinger".to_string()));
+        assert_that(&ii1.size).is_equal_to(Some(1234567890));
+        assert_that(&ii1.platform.as_ref().unwrap().os).is_equal_to(Some("linux".to_string()));
+        assert_that(&ii1.platform.as_ref().unwrap().arch).is_equal_to(Some("amd64".to_string()));
+    }
+
+
+
+    let imgs = &bun.images.as_ref();
+    assert_that(&imgs.unwrap().len()).is_equal_to(1);
+    {
+        let img = &bun.images.as_ref().unwrap().get(&"web".to_string()).unwrap();
+        assert_that(&img.image).is_equal_to("nginx:latest".to_string());
+        assert_that(&img.image_type).is_equal_to(Some("oci".to_string()));
+        assert_that(&img.media_type).is_equal_to(Some("application/x-image-thinger".to_string()));
+        assert_that(&img.size).is_equal_to(Some(1234567890));
+        assert_that(&img.platform.as_ref().unwrap().os).is_equal_to(Some("linux".to_string()));
+        assert_that(&img.platform.as_ref().unwrap().arch).is_equal_to(Some("amd64".to_string()));
+    }
 }
 
+
+// Test that a parsing failure returns an error (not a panic)
+#[test]
+fn test_bundle_parse_error() {
+    let bad_data = "{hello";
+    let bun = Bundle::from_string(bad_data);
+    assert_that(&bun.is_err()).is_true()
+}
+
+
+// Test loading a bundle from a file
 #[test]
 fn test_bundle_deserialize() {
     let bun = Bundle::from_file("testdata/bundle.json").unwrap();
@@ -303,6 +365,8 @@ fn test_bundle_deserialize() {
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
 }
 
+
+// Check that a missing file results in an error (not a panic)
 #[test]
 fn test_bundle_from_file_not_found() {
     let bun = Bundle::from_file("no/such/file.json");
