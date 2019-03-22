@@ -55,16 +55,56 @@ pub struct Bundle {
     pub version: String,
 }
 
-/// Represents a bundle.
+/// Represents a bundle descriptor.
+///
+/// In CNAB, the bundle descriptor defines all of the important aspects of a bundle.
+/// The Invocation Image, which performs the actual install, is defined in along with
+/// the metadata, the credentials, and the parameters. The list of associated images here
+/// are the images that together compose the application's runtime.
+///
+/// The `Bundle` follows the CNAB 1.0 WD specification as closely as possible. Fields
+/// marked OPTIONAL in the spec are wrapped in `Option` here, while any required fields
+/// must be set.
+///
+/// Example:
+/// ```
+///    use libcnab::cnab::Bundle;
+///
+///    let res = Bundle::from_string(
+///        r#"{
+///        "name": "aristotle",
+///        "invocationImages": [
+///            {
+///                "image": "nginx:latest@sha256:aaaaaa...",
+///                "imageType": "oci"
+///            }
+///        ],
+///        "schemaVersion": "1.0-WD",
+///        "version": "1.0.0"
+///    }"#,
+///    );
+///
+///    assert!(res.is_ok());
+///
+///    let bundle = res.unwrap();
+///    assert!(bundle.name == "aristotle".to_string());
+///    assert!(bundle.invocation_images[0].image_type.as_ref().unwrap() == &"oci".to_string())
+/// ```
 impl Bundle {
-    ///fn new(name: String, version: String) -> Bundle {}
+    /// Load a bundle from string data.
+    ///
+    /// This loads a bundle descriptor from JSON-formatted string data.
     pub fn from_string(json_data: &str) -> Result<Bundle, BundleParseError> {
         let res: Bundle = serde_json::from_str(json_data)?;
         Ok(res)
     }
 
+    /// Load a bundle descriptor from a file.
+    ///
+    /// This loads a bundle descriptor from a file. If the load fails, the
+    /// BundleParseError will be set to an IoError. If the parse fails, the
+    /// BundleParseError will be set to a SerdeJSONError.
     pub fn from_file(file_path: &str) -> Result<Bundle, BundleParseError> {
-        //let file = File::open(Path::new(&file_path)).expect("file not found");
         let file = File::open(Path::new(&file_path))?;
         let buf = std::io::BufReader::new(file);
         let res: Bundle = serde_json::from_reader(buf)?;
@@ -78,7 +118,10 @@ impl Bundle {
 /// fails to parse.
 #[derive(Debug)]
 pub enum BundleParseError {
+    /// A Serde JSON error indicates that the parsing of the JSON failed, possibly because
+    /// the JSON was malformed, or possibly because a required field was missing.
     SerdeJSONError(serde_json::Error),
+    /// An IoError indicates that loading the source JSON failed.
     IoError(std::io::Error)
 }
 
