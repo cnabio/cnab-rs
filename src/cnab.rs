@@ -1,6 +1,6 @@
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::btree_map::BTreeMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -20,24 +20,24 @@ pub struct Bundle {
     ///
     /// 'install', 'upgrade', and 'uninstall' are default actions, but additional actions
     /// may be defined here.
-    pub actions: Option<HashMap<String, Action>>,
+    pub actions: Option<BTreeMap<String, Action>>,
     /// The list of configurable credentials.
     ///
     /// Credentials are injected into the bundle's invocation image at startup time.
-    pub credentials: Option<HashMap<String, Credential>>,
+    pub credentials: Option<BTreeMap<String, Credential>>,
     /// This field allows for additional data to described in the bundle.
     ///
     /// This data should be stored in key/value pairs, where the value is undefined by
     /// the specification (but must be representable as JSON).
-    pub custom: Option<HashMap<String, serde_json::Value>>,
+    pub custom: Option<BTreeMap<String, serde_json::Value>>,
     /// description is a short description of this bundle
     pub description: Option<String>,
     /// The list of images that comprise this bundle.
     ///
     /// Each image here is considered a constituent of the application described by this
     /// bundle.
-    pub images: Option<HashMap<String, Image>>,
-    /// inovcation_images is the list of available bootstrapping images for this bundle
+    pub images: Option<BTreeMap<String, Image>>,
+    /// invocation_images is the list of available bootstrapping images for this bundle
     ///
     /// Only one ought to be executed.
     pub invocation_images: Vec<Image>,
@@ -52,7 +52,7 @@ pub struct Bundle {
     /// The collection of parameters that can be passed into this bundle.
     ///
     /// Parameters can be injected into a bundle during startup time.
-    pub parameters: Option<HashMap<String, Parameter>>,
+    pub parameters: Option<BTreeMap<String, Parameter>>,
     /// schema_version is the version of the CNAB specification used to describe this
     pub schema_version: String,
     /// version is the version of the bundle
