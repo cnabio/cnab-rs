@@ -230,7 +230,7 @@ pub struct Parameter {
 ///
 /// For example, an invocation image may provide help text by creating a 'help'
 /// action that, when triggered, prints help text to STDOUT.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Action {
     /// Describes what this action does
     pub description: Option<String>,

@@ -46,6 +46,36 @@ fn test_bundle_keywords() {
     assert_that(&kw[2]).is_equal_to("c".to_string());
 }
 
+#[test]
+fn test_bundle_actions() {
+    let bun: Bundle = r#"{
+        "name": "aristotle",
+        "invocationImages": [],
+        "schemaVersion": "1.0-WD",
+        "version": "1.0.0",
+        "actions": {
+            "my_action": {
+                "modifies": true,
+                "stateless": true,
+                "description": "a custom action"
+            }
+        }
+    }"#
+    .parse()
+    .unwrap();
+
+    let actions = bun.actions;
+    assert_that(&actions).is_some();
+    let action_map = actions.unwrap();
+    let my_action = &action_map.get(&"my_action".to_string());
+    assert_that(&my_action.is_some());
+    assert_that(&my_action.unwrap()).is_equal_to(&Action{
+        description: Option::from("a custom action".to_string()),
+        modifies: true,
+        stateless: true,
+    });
+}
+
 // Test parameters
 #[test]
 fn test_bundle_parameters() {
