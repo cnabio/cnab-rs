@@ -51,6 +51,34 @@ fn test_bundle_keywords() {
     assert_that(&kw[2]).is_equal_to("c".to_string());
 }
 
+#[test]
+fn test_bundle_actions() {
+    let res = Bundle::from_string(
+        r#"{
+        "name": "aristotle",
+        "invocationImages": [],
+        "schemaVersion": "1.0-WD",
+        "version": "1.0.0",
+        "actions": {
+            "my_action": {
+                "modifies": true,
+                "stateless": true,
+                "description": "a custom action"
+            }
+        }
+    }"#,
+    );
+    assert_that(&res.is_ok());
+
+    let actions = &res.as_ref().unwrap().actions;
+    assert_that(actions).is_some();
+    let my_action = &actions.as_ref().unwrap().get(&"my_action".to_string());
+    assert_that(&my_action.is_some());
+    assert_that(&my_action.as_ref().unwrap().description.as_ref().unwrap()).is_equal_to(&"a custom action".to_string());
+    assert_that(&my_action.as_ref().unwrap().stateless).is_true();
+    assert_that(&my_action.as_ref().unwrap().modifies).is_true();
+}
+
 // Test parameters
 #[test]
 fn test_bundle_parameters() {
