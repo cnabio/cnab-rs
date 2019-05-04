@@ -64,7 +64,6 @@ impl Bundle {
     }
 
     pub fn from_file(file_path: &str) -> Result<Bundle, BundleParseError> {
-        //let file = File::open(Path::new(&file_path)).expect("file not found");
         let file = File::open(Path::new(&file_path))?;
         let buf = std::io::BufReader::new(file);
         let res: Bundle = serde_json::from_reader(buf)?;
