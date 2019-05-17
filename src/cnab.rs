@@ -78,7 +78,7 @@ impl Bundle {
 #[derive(Debug)]
 pub enum BundleParseError {
     SerdeJSONError(serde_json::Error),
-    IoError(std::io::Error)
+    IoError(std::io::Error),
 }
 
 impl From<std::io::Error> for BundleParseError {
@@ -88,12 +88,12 @@ impl From<std::io::Error> for BundleParseError {
 }
 
 impl From<serde_json::Error> for BundleParseError {
-    fn from(error: serde_json::Error) -> Self{
+    fn from(error: serde_json::Error) -> Self {
         BundleParseError::SerdeJSONError(error)
     }
 }
 
-/// Maintainer describes a bundle mainainer.
+/// Maintainer describes a bundle maintainer.
 ///
 /// The name field is required, though the format of its value is unspecified.
 #[derive(Debug, Serialize, Deserialize)]
@@ -179,7 +179,7 @@ pub struct Parameter {
     pub exclusive_minimum: Option<i64>,
     /// The maximum
     ///
-    /// If unspecieid, the maximum 64-bit integer value is applied
+    /// If unspecified, the maximum 64-bit integer value is applied
     pub maximum: Option<i64>,
     /// The maximum length of a string value
     ///
@@ -221,7 +221,7 @@ pub struct Action {
     /// If true, this action does not require any state information to be injected
     ///
     /// For example, printing help text does not require an installation, credentials,
-    /// or paramters.
+    /// or parameters.
     #[serde(default)]
     pub stateless: bool,
 }
@@ -233,11 +233,11 @@ pub struct Metadata {
     pub description: Option<String>,
 }
 
-/// Destination describes where, in the invocation image, a particular paramter value should be
+/// Destination describes where, in the invocation image, a particular parameter value should be
 /// placed.
 ///
 /// A parameter value can be placed into an environment variable (`env`) or a file at
-/// a particular location on the filesystem (`path`). This is a non-exclusive or, meaining
+/// a particular location on the filesystem (`path`). This is a non-exclusive or, meaning
 /// that the same paramter can be written to both an env var and a path.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Destination {
