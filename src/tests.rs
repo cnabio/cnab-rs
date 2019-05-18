@@ -1,4 +1,4 @@
-use crate::cnab::Bundle;
+use crate::cnab::*;
 use semver::Version;
 use serde_json::*;
 use spectral::prelude::*;
@@ -6,16 +6,14 @@ use spectral::prelude::*;
 #[test]
 // Testing that we can build one with only the minimal fields.
 fn test_bundle_simple() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
         "version": "1.0.0"
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
@@ -26,17 +24,15 @@ fn test_bundle_simple() {
 // Test labels
 #[test]
 fn test_bundle_keywords() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
         "version": "1.0.0",
         "keywords": ["a", "b", "c"]
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
@@ -53,8 +49,7 @@ fn test_bundle_keywords() {
 // Test parameters
 #[test]
 fn test_bundle_parameters() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
@@ -103,10 +98,9 @@ fn test_bundle_parameters() {
                 "type": "string"
             }
         }
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
@@ -218,8 +212,7 @@ fn test_bundle_parameters() {
 // Test custom data
 #[test]
 fn test_bundle_custom() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0.0",
@@ -229,12 +222,10 @@ fn test_bundle_custom() {
             "techne": true
           }
         }
-    }"#,
-    );
+    }"#
+    .parse()
+    .unwrap();
 
-    assert_that(&res).is_ok();
-
-    let bun = res.unwrap();
     assert_that(&bun.custom).is_some();
     let val: Option<&serde_json::Value> = bun
         .custom
@@ -248,8 +239,7 @@ fn test_bundle_custom() {
 // Test credentials
 #[test]
 fn test_bundle_credentials() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
@@ -268,10 +258,9 @@ fn test_bundle_credentials() {
                 "env": "FOO"
             }
         }
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.credentials.as_ref()).is_some();
 
@@ -304,8 +293,7 @@ fn test_bundle_credentials() {
 #[test]
 fn test_bundle_images() {
     // Testing that we can build one with only the minimal fields.
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "images": {
             "web": {
@@ -334,10 +322,9 @@ fn test_bundle_images() {
         "schemaVersion": "1.0-WD",
         "version": "1.0.0",
         "labels": ["hello", "world"]
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
@@ -378,7 +365,7 @@ fn test_bundle_images() {
 #[test]
 fn test_bundle_parse_error() {
     let bad_data = "{hello";
-    let bun = Bundle::from_string(bad_data);
+    let bun = bad_data.parse::<Bundle>();
     assert_that(&bun.is_err()).is_true()
 }
 

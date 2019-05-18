@@ -2,7 +2,9 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
+use std::io::Read;
 use std::path::Path;
+use std::str::FromStr;
 
 /// Bundle implements a CNAB bundle descriptor
 ///
@@ -59,16 +61,32 @@ pub struct Bundle {
 
 /// Represents a bundle.
 impl Bundle {
-    ///fn new(name: String, version: Version) -> Bundle {}
-    pub fn from_string(json_data: &str) -> Result<Self, serde_json::Error> {
-        let res: Bundle = serde_json::from_str(json_data)?;
-        Ok(res)
+    /// A convenience function to open and deserialize a [`bundle.json`](https://github.com/deislabs/cnab-spec/blob/master/101-bundle-json.md) file.
+    ///
+    /// ```
+    /// use libcnab::cnab::Bundle;
+    ///
+    /// let bundle = Bundle::from_file("testdata/bundle.json").unwrap();
+    /// assert_eq!(bundle.name, "helloworld");
+    /// ```
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, BundleParseError> {
+        let file = File::open(path)?;
+        Self::from_json(file)
     }
 
-    pub fn from_file(file_path: &str) -> Result<Self, BundleParseError> {
-        let file = File::open(Path::new(&file_path))?;
-        let buf = std::io::BufReader::new(file);
-        Ok(serde_json::from_reader(buf)?)
+    /// Deserialize a `Bundle` from any type implementing `Read`.
+    pub fn from_json<R: Read>(reader: R) -> Result<Self, BundleParseError> {
+        let bundle = serde_json::from_reader(reader)?;
+        Ok(bundle)
+    }
+}
+
+impl FromStr for Bundle {
+    type Err = serde_json::Error;
+
+    fn from_str(json_data: &str) -> Result<Self, Self::Err> {
+        let bundle = serde_json::from_str(json_data)?;
+        Ok(bundle)
     }
 }
 

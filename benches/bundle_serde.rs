@@ -6,6 +6,7 @@ use libcnab::cnab::Bundle;
 use criterion::{black_box, Benchmark, Criterion, Throughput};
 use std::fs::File;
 use std::io::Read;
+use std::str::FromStr;
 
 fn serialize(c: &mut Criterion) {
     let mut json = String::new();
@@ -13,7 +14,7 @@ fn serialize(c: &mut Criterion) {
         .unwrap()
         .read_to_string(&mut json)
         .unwrap();
-    let bundle = Bundle::from_string(&json).unwrap();
+    let bundle = Bundle::from_str(&json).unwrap();
     let size = Throughput::Bytes(serde_json::to_string(&bundle).unwrap().len() as u32);
 
     c.bench(
@@ -36,7 +37,7 @@ fn deserialize(c: &mut Criterion) {
     c.bench(
         "Bundle",
         Benchmark::new("deserialize", move |b| {
-            b.iter(|| Bundle::from_string(black_box(&json)).unwrap())
+            b.iter(|| Bundle::from_str(black_box(&json)).unwrap())
         })
         .throughput(size),
     );
