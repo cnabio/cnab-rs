@@ -10,7 +10,7 @@ use std::str::FromStr;
 ///
 /// Bundle descriptors describe the properties of a bundle, including which images
 /// are associated, what parameters and credentials are configurable, and whether there
-/// are any additional traget actions that can be executed on this bundle.
+/// are any additional target actions that can be executed on this bundle.
 ///
 /// The fields here are in canonical order.
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,7 +64,7 @@ impl Bundle {
     /// A convenience function to open and deserialize a [`bundle.json`](https://github.com/deislabs/cnab-spec/blob/master/101-bundle-json.md) file.
     ///
     /// ```
-    /// use libcnab::cnab::Bundle;
+    /// use libcnab::Bundle;
     ///
     /// let bundle = Bundle::from_file("testdata/bundle.json").unwrap();
     /// assert_eq!(bundle.name, "helloworld");

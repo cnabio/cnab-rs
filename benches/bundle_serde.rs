@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate criterion;
 
-use libcnab::cnab::Bundle;
+use libcnab::Bundle;
 
 use criterion::{black_box, Benchmark, Criterion, Throughput};
 use std::fs::File;
