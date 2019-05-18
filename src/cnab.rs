@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 /// Bundle implements a CNAB bundle descriptor
@@ -166,7 +166,7 @@ pub struct Credential {
     /// The name of the environment variable into which the value will be placed
     pub env: Option<String>,
     /// The fully qualified path into which the value will be placed
-    pub path: Option<String>,
+    pub path: Option<PathBuf>,
 }
 
 /// Parameter describes a parameter that will be put into the invocation image
@@ -263,5 +263,5 @@ pub struct Destination {
     /// The name of the destination environment variable
     pub env: Option<String>,
     /// The fully qualified path to the destination file
-    pub path: Option<String>,
+    pub path: Option<PathBuf>,
 }

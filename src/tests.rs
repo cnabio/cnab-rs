@@ -145,10 +145,11 @@ fn test_bundle_parameters() {
         assert_that(&arg2.unwrap().required).is_true();
 
         // Destination should have just path
-        assert_that(&arg2.unwrap().destination.env.as_ref()).is_none();
-        assert_that(&arg2.unwrap().destination.path.as_ref())
+        let destination = &arg2.unwrap().destination;
+        assert_that(&destination.env.as_ref()).is_none();
+        assert_that(&destination.path)
             .is_some()
-            .is_equal_to(&"/path/to/num".to_string());
+            .is_equal_to("/path/to/num".parse::<std::path::PathBuf>().unwrap());
 
         // Test min/max
         assert_that(&arg2.unwrap().minimum)
@@ -178,7 +179,9 @@ fn test_bundle_parameters() {
         assert_that(&env).is_equal_to(&Some("LETTERS".to_string()));
 
         let path = &dest.path;
-        assert_that(path).is_equal_to(&Some("/path/to/abc".to_string()));
+        assert_that(path)
+            .is_some()
+            .is_equal_to("/path/to/abc".parse::<std::path::PathBuf>().unwrap());
 
         let abc = json!("abc");
         let dv = &arg3.unwrap().default_value;
@@ -281,7 +284,7 @@ fn test_bundle_credentials() {
     assert_that(&second.env).is_none();
     assert_that(&second.path)
         .is_some()
-        .is_equal_to("/etc/config".to_string());
+        .is_equal_to("/etc/config".parse::<std::path::PathBuf>().unwrap());
 
     let third = &creds.get(&"myboth".to_string()).unwrap();
     assert_that(&third.description).is_none();
