@@ -1,3 +1,4 @@
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
@@ -53,22 +54,21 @@ pub struct Bundle {
     /// schema_version is the version of the CNAB specification used to describe this
     pub schema_version: String,
     /// version is the version of the bundle
-    pub version: String,
+    pub version: Version,
 }
 
 /// Represents a bundle.
 impl Bundle {
-    ///fn new(name: String, version: String) -> Bundle {}
-    pub fn from_string(json_data: &str) -> Result<Bundle, serde_json::Error> {
+    ///fn new(name: String, version: Version) -> Bundle {}
+    pub fn from_string(json_data: &str) -> Result<Self, serde_json::Error> {
         let res: Bundle = serde_json::from_str(json_data)?;
         Ok(res)
     }
 
-    pub fn from_file(file_path: &str) -> Result<Bundle, BundleParseError> {
+    pub fn from_file(file_path: &str) -> Result<Self, BundleParseError> {
         let file = File::open(Path::new(&file_path))?;
         let buf = std::io::BufReader::new(file);
-        let res: Bundle = serde_json::from_reader(buf)?;
-        Ok(res)
+        Ok(serde_json::from_reader(buf)?)
     }
 }
 

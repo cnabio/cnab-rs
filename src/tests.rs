@@ -1,4 +1,5 @@
 use crate::cnab::Bundle;
+use semver::Version;
 use serde_json::*;
 use spectral::prelude::*;
 
@@ -18,7 +19,7 @@ fn test_bundle_simple() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 }
 
@@ -39,7 +40,7 @@ fn test_bundle_keywords() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 
     let kw = &bun.keywords.unwrap();
@@ -109,7 +110,7 @@ fn test_bundle_parameters() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
 
     let params = bun.parameters.unwrap();
     assert_that(&params.len()).is_equal_to(&3);
@@ -340,7 +341,7 @@ fn test_bundle_images() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
 
     // Check that all of the fields unmarshaled correctly.
     let invo_imgs = &bun.invocation_images;
@@ -388,7 +389,7 @@ fn test_bundle_deserialize() {
 
     assert_that(&bun.name).is_equal_to("helloworld".to_string());
     assert_that(&bun.schema_version).is_equal_to("v1.0.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("0.1.2".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(0, 1, 2));
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
 }
