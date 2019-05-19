@@ -17,3 +17,10 @@ maintenance = { status = "experimental" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 spectral = "0.6"
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "bundle_serde"
+harness = false
