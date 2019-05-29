@@ -1,7 +1,5 @@
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+#![cfg_attr(test, deny(warnings))]
+#![warn(rust_2018_idioms)]
 
 pub mod cnab;
 

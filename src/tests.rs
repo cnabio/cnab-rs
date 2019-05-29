@@ -1,5 +1,3 @@
-extern crate spectral;
-
 use crate::cnab::Bundle;
 use serde_json::*;
 use spectral::prelude::*;
@@ -125,12 +123,18 @@ fn test_bundle_parameters() {
         assert_that(&arg1.unwrap().required).is_false();
 
         // Destination should have just env
-        assert_that(&arg1.unwrap().destination.env.as_ref()).is_some().is_equal_to(&"FIRST".to_string());
+        assert_that(&arg1.unwrap().destination.env.as_ref())
+            .is_some()
+            .is_equal_to(&"FIRST".to_string());
         assert_that(&arg1.unwrap().destination.path).is_none();
 
         // Test exclusive_min/max
-        assert_that(&arg1.unwrap().exclusive_minimum).is_some().is_equal_to(&123);
-        assert_that(&arg1.unwrap().exclusive_maximum).is_some().is_equal_to(&567789);
+        assert_that(&arg1.unwrap().exclusive_minimum)
+            .is_some()
+            .is_equal_to(&123);
+        assert_that(&arg1.unwrap().exclusive_maximum)
+            .is_some()
+            .is_equal_to(&567789);
 
         // Sanity check that min and max are none.
         assert_that(&arg1.unwrap().minimum).is_none();
@@ -147,11 +151,17 @@ fn test_bundle_parameters() {
 
         // Destination should have just path
         assert_that(&arg2.unwrap().destination.env.as_ref()).is_none();
-        assert_that(&arg2.unwrap().destination.path.as_ref()).is_some().is_equal_to(&"/path/to/num".to_string());
+        assert_that(&arg2.unwrap().destination.path.as_ref())
+            .is_some()
+            .is_equal_to(&"/path/to/num".to_string());
 
         // Test min/max
-        assert_that(&arg2.unwrap().minimum).is_some().is_equal_to(&123);
-        assert_that(&arg2.unwrap().maximum).is_some().is_equal_to(&567789);
+        assert_that(&arg2.unwrap().minimum)
+            .is_some()
+            .is_equal_to(&123);
+        assert_that(&arg2.unwrap().maximum)
+            .is_some()
+            .is_equal_to(&567789);
 
         // Sanity check that exclusive min and max are none.
         assert_that(&arg2.unwrap().exclusive_minimum).is_none();
@@ -182,15 +192,21 @@ fn test_bundle_parameters() {
         let allowed = &arg3.unwrap().allowed_values;
         assert_that(allowed).is_equal_to(&Some(vec![json!("a"), json!("ab"), json!("abc")]));
 
-        assert_that(&arg3.as_ref().unwrap().min_length).is_some().is_equal_to(1);
-        assert_that(&arg3.as_ref().unwrap().max_length).is_some().is_equal_to(5);
+        assert_that(&arg3.as_ref().unwrap().min_length)
+            .is_some()
+            .is_equal_to(1);
+        assert_that(&arg3.as_ref().unwrap().max_length)
+            .is_some()
+            .is_equal_to(5);
         assert_that(&arg3.as_ref().unwrap().pattern).is_equal_to(&Some("[a-z]+".to_string()));
         assert_that(&arg3.unwrap().required).is_true();
 
         let meta = &arg3.as_ref().unwrap().metadata;
         assert_that(&meta.as_ref()).is_some();
 
-        assert_that(&meta.as_ref().unwrap().description.as_ref()).is_some().is_equal_to(&"a parameter".to_string());
+        assert_that(&meta.as_ref().unwrap().description.as_ref())
+            .is_some()
+            .is_equal_to(&"a parameter".to_string());
 
         let apply_to = &arg3.unwrap().apply_to;
         assert_that(apply_to).is_equal_to(&Some(vec!["uninstall".to_string()]));
@@ -219,10 +235,13 @@ fn test_bundle_custom() {
 
     let bun = res.unwrap();
     assert_that(&bun.custom).is_some();
-    let val: Option<&serde_json::Value> = bun.custom.as_ref().unwrap().get(&"com.example.praxis".to_string());
+    let val: Option<&serde_json::Value> = bun
+        .custom
+        .as_ref()
+        .unwrap()
+        .get(&"com.example.praxis".to_string());
     // Lookup docs on Value when I'm online again.
     assert_that(&val).is_some(); // .map(|v| v.get("foo").is_some() );
-
 }
 
 // Test credentials
@@ -257,14 +276,22 @@ fn test_bundle_credentials() {
 
     let creds = &bun.credentials.as_ref().unwrap();
     let first = &creds.get(&"mytoken".to_string()).unwrap();
-    assert_that(&first.description).is_some().is_equal_to("token".to_string());
-    assert_that(&first.env).is_some().is_equal_to("TOKEN".to_string());
+    assert_that(&first.description)
+        .is_some()
+        .is_equal_to("token".to_string());
+    assert_that(&first.env)
+        .is_some()
+        .is_equal_to("TOKEN".to_string());
     assert_that(&first.path).is_none();
 
     let second = &creds.get(&"myconfig".to_string()).unwrap();
-    assert_that(&second.description).is_some().is_equal_to("config".to_string());
+    assert_that(&second.description)
+        .is_some()
+        .is_equal_to("config".to_string());
     assert_that(&second.env).is_none();
-    assert_that(&second.path).is_some().is_equal_to("/etc/config".to_string());
+    assert_that(&second.path)
+        .is_some()
+        .is_equal_to("/etc/config".to_string());
 
     let third = &creds.get(&"myboth".to_string()).unwrap();
     assert_that(&third.description).is_none();
@@ -328,12 +355,15 @@ fn test_bundle_images() {
         assert_that(&ii1.platform.as_ref().unwrap().arch).is_equal_to(Some("amd64".to_string()));
     }
 
-
-
     let imgs = &bun.images.as_ref();
     assert_that(&imgs.unwrap().len()).is_equal_to(1);
     {
-        let img = &bun.images.as_ref().unwrap().get(&"web".to_string()).unwrap();
+        let img = &bun
+            .images
+            .as_ref()
+            .unwrap()
+            .get(&"web".to_string())
+            .unwrap();
         assert_that(&img.image).is_equal_to("nginx:latest".to_string());
         assert_that(&img.image_type).is_equal_to(Some("oci".to_string()));
         assert_that(&img.media_type).is_equal_to(Some("application/x-image-thinger".to_string()));
@@ -343,7 +373,6 @@ fn test_bundle_images() {
     }
 }
 
-
 // Test that a parsing failure returns an error (not a panic)
 #[test]
 fn test_bundle_parse_error() {
@@ -351,7 +380,6 @@ fn test_bundle_parse_error() {
     let bun = Bundle::from_string(bad_data);
     assert_that(&bun.is_err()).is_true()
 }
-
 
 // Test loading a bundle from a file
 #[test]
@@ -364,7 +392,6 @@ fn test_bundle_deserialize() {
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
 }
-
 
 // Check that a missing file results in an error (not a panic)
 #[test]
