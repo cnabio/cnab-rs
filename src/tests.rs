@@ -1,45 +1,42 @@
-use crate::cnab::Bundle;
+use crate::cnab::*;
+use semver::Version;
 use serde_json::*;
 use spectral::prelude::*;
 
 #[test]
 // Testing that we can build one with only the minimal fields.
 fn test_bundle_simple() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
         "version": "1.0.0"
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 }
 
 // Test labels
 #[test]
 fn test_bundle_keywords() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
         "version": "1.0.0",
         "keywords": ["a", "b", "c"]
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 
     let kw = &bun.keywords.unwrap();
@@ -52,8 +49,7 @@ fn test_bundle_keywords() {
 // Test parameters
 #[test]
 fn test_bundle_parameters() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
@@ -102,14 +98,13 @@ fn test_bundle_parameters() {
                 "type": "string"
             }
         }
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
 
     let params = bun.parameters.unwrap();
     assert_that(&params.len()).is_equal_to(&3);
@@ -150,10 +145,11 @@ fn test_bundle_parameters() {
         assert_that(&arg2.unwrap().required).is_true();
 
         // Destination should have just path
-        assert_that(&arg2.unwrap().destination.env.as_ref()).is_none();
-        assert_that(&arg2.unwrap().destination.path.as_ref())
+        let destination = &arg2.unwrap().destination;
+        assert_that(&destination.env.as_ref()).is_none();
+        assert_that(&destination.path)
             .is_some()
-            .is_equal_to(&"/path/to/num".to_string());
+            .is_equal_to("/path/to/num".parse::<std::path::PathBuf>().unwrap());
 
         // Test min/max
         assert_that(&arg2.unwrap().minimum)
@@ -183,7 +179,9 @@ fn test_bundle_parameters() {
         assert_that(&env).is_equal_to(&Some("LETTERS".to_string()));
 
         let path = &dest.path;
-        assert_that(path).is_equal_to(&Some("/path/to/abc".to_string()));
+        assert_that(path)
+            .is_some()
+            .is_equal_to("/path/to/abc".parse::<std::path::PathBuf>().unwrap());
 
         let abc = json!("abc");
         let dv = &arg3.unwrap().default_value;
@@ -217,8 +215,7 @@ fn test_bundle_parameters() {
 // Test custom data
 #[test]
 fn test_bundle_custom() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0.0",
@@ -228,12 +225,10 @@ fn test_bundle_custom() {
             "techne": true
           }
         }
-    }"#,
-    );
+    }"#
+    .parse()
+    .unwrap();
 
-    assert_that(&res).is_ok();
-
-    let bun = res.unwrap();
     assert_that(&bun.custom).is_some();
     let val: Option<&serde_json::Value> = bun
         .custom
@@ -247,8 +242,7 @@ fn test_bundle_custom() {
 // Test credentials
 #[test]
 fn test_bundle_credentials() {
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
         "schemaVersion": "1.0-WD",
@@ -267,10 +261,9 @@ fn test_bundle_credentials() {
                 "env": "FOO"
             }
         }
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.credentials.as_ref()).is_some();
 
@@ -291,7 +284,7 @@ fn test_bundle_credentials() {
     assert_that(&second.env).is_none();
     assert_that(&second.path)
         .is_some()
-        .is_equal_to("/etc/config".to_string());
+        .is_equal_to("/etc/config".parse::<std::path::PathBuf>().unwrap());
 
     let third = &creds.get(&"myboth".to_string()).unwrap();
     assert_that(&third.description).is_none();
@@ -303,8 +296,7 @@ fn test_bundle_credentials() {
 #[test]
 fn test_bundle_images() {
     // Testing that we can build one with only the minimal fields.
-    let res = Bundle::from_string(
-        r#"{
+    let bun: Bundle = r#"{
         "name": "aristotle",
         "images": {
             "web": {
@@ -333,14 +325,13 @@ fn test_bundle_images() {
         "schemaVersion": "1.0-WD",
         "version": "1.0.0",
         "labels": ["hello", "world"]
-    }"#,
-    );
-
-    let bun = res.unwrap();
+    }"#
+    .parse()
+    .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
 
     // Check that all of the fields unmarshaled correctly.
     let invo_imgs = &bun.invocation_images;
@@ -377,7 +368,7 @@ fn test_bundle_images() {
 #[test]
 fn test_bundle_parse_error() {
     let bad_data = "{hello";
-    let bun = Bundle::from_string(bad_data);
+    let bun = bad_data.parse::<Bundle>();
     assert_that(&bun.is_err()).is_true()
 }
 
@@ -388,7 +379,7 @@ fn test_bundle_deserialize() {
 
     assert_that(&bun.name).is_equal_to("helloworld".to_string());
     assert_that(&bun.schema_version).is_equal_to("v1.0.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to("0.1.2".to_string());
+    assert_that(&bun.version).is_equal_to(Version::new(0, 1, 2));
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
 }
