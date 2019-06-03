@@ -1,5 +1,10 @@
 use crate::cnab::*;
-use semver::Version;
+
+#[macro_use]
+use serde::*;
+#[macro_use]
+use serde_derive::*;
+#[macro_use]
 use serde_json::*;
 use spectral::prelude::*;
 
@@ -17,7 +22,7 @@ fn test_bundle_simple() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 }
 
@@ -36,7 +41,7 @@ fn test_bundle_keywords() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 
     let kw = &bun.keywords.unwrap();
@@ -104,7 +109,7 @@ fn test_bundle_parameters() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
 
     let params = bun.parameters.unwrap();
     assert_that(&params.len()).is_equal_to(&3);
@@ -183,13 +188,16 @@ fn test_bundle_parameters() {
             .is_some()
             .is_equal_to("/path/to/abc".parse::<std::path::PathBuf>().unwrap());
 
-        let abc = json!("abc");
+        let abc = Value::String("abc".to_string());
         let dv = &arg3.unwrap().default_value;
         assert_that(dv).is_equal_to(&Some(abc));
 
         let allowed = &arg3.unwrap().allowed_values;
-        assert_that(allowed).is_equal_to(&Some(vec![json!("a"), json!("ab"), json!("abc")]));
-
+        assert_that(allowed).is_equal_to(&Some(vec![
+            Value::String("a".to_string()),
+            Value::String("ab".to_string()),
+            Value::String("abc".to_string()),
+        ]));
         assert_that(&arg3.as_ref().unwrap().min_length)
             .is_some()
             .is_equal_to(1);
@@ -331,7 +339,7 @@ fn test_bundle_images() {
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
     assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
+    assert_that(&bun.version).is_equal_to("1.0.0".to_string());
 
     // Check that all of the fields unmarshaled correctly.
     let invo_imgs = &bun.invocation_images;
@@ -379,7 +387,7 @@ fn test_bundle_deserialize() {
 
     assert_that(&bun.name).is_equal_to("helloworld".to_string());
     assert_that(&bun.schema_version).is_equal_to("v1.0.0-WD".to_string());
-    assert_that(&bun.version).is_equal_to(Version::new(0, 1, 2));
+    assert_that(&bun.version).is_equal_to("0.1.2".to_string());
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
 }
