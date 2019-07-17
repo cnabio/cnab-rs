@@ -364,6 +364,34 @@ fn test_bundle_images() {
     }
 }
 
+// Test maintainers
+#[test]
+fn test_bundle_maintainers() {
+    let bun: Bundle = r#"{
+        "name": "aristotle",
+        "invocationImages": [],
+        "schemaVersion": "1.0.0",
+        "version": "1.0.0",
+        "maintainers": [
+            {
+                "email": "matt.butcher@microsoft.com",
+                "name": "Matt Butcher",
+                "url": "https://example.com"
+            }
+        ]
+    }"#
+        .parse()
+        .unwrap();
+
+    let maints = bun.maintainers.unwrap();
+    assert_that(&maints.len()).is_equal_to(&1);
+    assert_that(&maints[0]).is_equal_to(&Maintainer {
+        email: Option::from("matt.butcher@microsoft.com".to_string()),
+        name: "Matt Butcher".to_string(),
+        url: Option::from("https://example.com".to_string()),
+    });
+}
+
 // Test that a parsing failure returns an error (not a panic)
 #[test]
 fn test_bundle_parse_error() {

@@ -115,7 +115,7 @@ impl From<serde_json::Error> for BundleParseError {
 /// Maintainer describes a bundle maintainer.
 ///
 /// The name field is required, though the format of its value is unspecified.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Maintainer {
     /// The email address of the maintainer
     pub email: Option<String>,
