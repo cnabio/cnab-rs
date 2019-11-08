@@ -1,6 +1,6 @@
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -20,39 +20,47 @@ pub struct Bundle {
     ///
     /// 'install', 'upgrade', and 'uninstall' are default actions, but additional actions
     /// may be defined here.
-    pub actions: Option<HashMap<String, Action>>,
+    pub actions: Option<BTreeMap<String, Action>>,
     /// The list of configurable credentials.
     ///
     /// Credentials are injected into the bundle's invocation image at startup time.
-    pub credentials: Option<HashMap<String, Credential>>,
+    pub credentials: Option<BTreeMap<String, Credential>>,
     /// This field allows for additional data to described in the bundle.
     ///
     /// This data should be stored in key/value pairs, where the value is undefined by
     /// the specification (but must be representable as JSON).
-    pub custom: Option<HashMap<String, serde_json::Value>>,
+    pub custom: Option<BTreeMap<String, serde_json::Value>>,
+
+    /// The JSON Schemata describing the parameters
+    ///
+    /// TODO: Should use a suitable Rust library as the target for this.
+    pub definitions: Option<BTreeMap<String, serde_json::Value>>,
+
     /// description is a short description of this bundle
     pub description: Option<String>,
     /// The list of images that comprise this bundle.
     ///
     /// Each image here is considered a constituent of the application described by this
     /// bundle.
-    pub images: Option<HashMap<String, Image>>,
-    /// inovcation_images is the list of available bootstrapping images for this bundle
+    pub images: Option<BTreeMap<String, Image>>,
+    /// The list of available bootstrapping images for this bundle
     ///
     /// Only one ought to be executed.
-    pub invocation_images: Vec<Image>,
-    /// keywords is a list of keywords describing this bundle
+    pub invocation_images: Vec<InvocationImage>,
+    /// A list of keywords describing this bundle
     pub keywords: Option<Vec<String>>,
-    /// license is the license of this bundle
+    /// The SPDX license identifier of this bundle
     pub license: Option<String>,
-    /// maintainers is a list of maintainers responsible for this bundle
+    /// A list of maintainers responsible for this bundle
     pub maintainers: Option<Vec<Maintainer>>,
-    /// name is the name of the bundle
+    /// The name of the bundle
     pub name: String,
+    /// The name/value pairs of outputs that this bundle produces.
+    pub outputs: Option<BTreeMap<String, Output>>,
     /// The collection of parameters that can be passed into this bundle.
     ///
     /// Parameters can be injected into a bundle during startup time.
-    pub parameters: Option<HashMap<String, Parameter>>,
+    pub parameters: Option<BTreeMap<String, Parameter>>,
     /// schema_version is the version of the CNAB specification used to describe this
     pub schema_version: String,
     /// version is the version of the bundle
@@ -131,11 +139,14 @@ pub struct Maintainer {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Image {
+    /// A description of the purpose of this image
+    pub description: Option<String>,
     /// A digest to be used to verify the integrity of the image
-    pub digest: Option<String>,
-    /// The image, as a string of the form REPO/NAME:TAG@SHA
+    /// A cryptographic hash digest of the contents of the image that can be used to validate the image. This may be interpreted differently based on imageType
+    pub content_digest: Option<String>,
+    /// A resolvable reference to the image. This may be interpreted differently based on imageType, but the default is to treat this as an OCI image
     pub image: String,
-    /// The type of image. Typically, this is treated as an OCI Image
+    /// The type of image. If not specified, this is treated as an OCI Image (`oci`)
     pub image_type: Option<String>,
     /// The media type of the image
     pub media_type: Option<String>,
@@ -143,6 +154,36 @@ pub struct Image {
     pub platform: Option<Platform>,
     /// The size in bytes of the image
     pub size: Option<i64>,
+    /// Key/value pairs that used to specify identifying attributes of images
+    pub labels: Option<BTreeMap<String, String>>,
+}
+
+/// InvocationImage describes a bootstrapping image for a CNAB bundle.
+///
+/// In the final CNAB Core 1.0 spec, this is subtly different than the regular Image type.
+///
+/// This conforms to the CNAB Core 1.0 specification
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvocationImage {
+    /// A digest to be used to verify the integrity of the image
+    /// A cryptographic hash digest of the contents of the image that can be used to validate the image. This may be interpreted differently based on imageType
+    ///
+    /// The specification requires this field _at installation time_, but not during development. Thus it is optional, and the runtime must validate whether
+    /// the circumstances require a value here.
+    pub content_digest: Option<String>,
+    /// A resolvable reference to the image. This may be interpreted differently based on imageType, but the default is to treat this as an OCI image
+    pub image: String,
+    /// The type of image. If not specified, this is treated as an OCI Image (`oci`)
+    ///
+    /// The spec lists this field as required, but with a defined default. We interpret that to mean that if None, then `oci`.
+    pub image_type: Option<String>,
+    /// The media type of the image
+    pub media_type: Option<String>,
+    /// The size in bytes of the image
+    pub size: Option<i64>,
+    /// Key/value pairs that used to specify identifying attributes of images
+    pub labels: Option<BTreeMap<String, String>>,
 }
 
 /// Platform defines a platform as a machine architecture plus and operating system
@@ -159,6 +200,8 @@ pub struct Platform {
 }
 
 /// Credential describes a particular credential that may be injected into a bundle
+///
+/// Satisfies the CNAB Core 1.0 specification
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Credential {
     /// The description of this credential
@@ -167,11 +210,15 @@ pub struct Credential {
     pub env: Option<String>,
     /// The fully qualified path into which the value will be placed
     pub path: Option<PathBuf>,
+    /// Indicates whether this credential must be supplied. None is interpreted as "Some(false)".
+    pub required: Option<bool>,
 }
 
 /// Parameter describes a parameter that will be put into the invocation image
 ///
 /// Paramters are injected into the invocation image at startup time
+///
+/// Conforms to CNAB Core 1.0
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Parameter {
@@ -179,51 +226,17 @@ pub struct Parameter {
     ///
     /// If unset, this parameter will be applied to all actions.
     pub apply_to: Option<Vec<String>>,
+    /// The name of a definition that describes the schema structure of this parameter
+    pub definition: Option<String>,
+    /// Human readable description of what this parameter does
+    pub description: Option<String>,
+    /// This describes the underlying type of the parameter (string, int...)
     /// The location where this parameter will be injected in the invocation image
     pub destination: Destination,
-    /// This parameter's default value
-    pub default_value: Option<serde_json::Value>,
-
-    /// An enumeration of allowed values
-    #[serde(rename = "enum")]
-    pub allowed_values: Option<Vec<serde_json::Value>>,
-    /// alphabetically, this is 'enum'
-    /// The exclusive maximum.
-    ///
-    /// If unspecified, no exclusive max is applied
-    pub exclusive_maximum: Option<i64>,
-    /// The exclusive minimum.
-    ///
-    /// If unspecified, no exclusive min is applied
-    pub exclusive_minimum: Option<i64>,
-    /// The maximum
-    ///
-    /// If unspecified, the maximum 64-bit integer value is applied
-    pub maximum: Option<i64>,
-    /// The maximum length of a string value
-    ///
-    /// If unspecified, no max is applied.
-    pub max_length: Option<i64>,
-    /// Additional parameter information
-    pub metadata: Option<Metadata>,
-    /// The minimum integer value
-    ///
-    /// If unspecified, the minimum 64-bit integer value is applied
-    pub minimum: Option<i64>,
-    /// The minimum string length
-    pub min_length: Option<i64>,
-    /// A regular expression (as defined in ECMAScript)
-    ///
-    /// If it is not matched, a string parameter value will be rejected
-    pub pattern: Option<String>,
     /// Indicate whether this parameter is required
     ///
-    /// Default is false.
-    #[serde(default)]
-    pub required: bool,
-    /// This describes the underlying type of the parameter (string, int...)
-    #[serde(rename = "type")]
-    pub parameter_type: String, // Should be Enum; alphabetically, this is 'type'
+    /// None is treated as Some<false>
+    pub required: Option<bool>,
 }
 
 /// An Action is a custom action in an invocation image.
@@ -263,5 +276,21 @@ pub struct Destination {
     /// The name of the destination environment variable
     pub env: Option<String>,
     /// The fully qualified path to the destination file
+    pub path: Option<PathBuf>,
+}
+
+/// A value that is produced by running an invocation image
+///
+/// Complies to CNAB Core 1.0
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Output {
+    /// An optional exhaustive list of actions producing this output
+    pub apply_to: Option<String>,
+    /// The name of a definition that describes the schema structure of this output
+    pub definition: String,
+    /// Human-readable description of this output
+    pub description: Option<String>,
+    /// The path inside of the invocation image where output will be written
     pub path: Option<PathBuf>,
 }
