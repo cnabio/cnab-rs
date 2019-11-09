@@ -286,7 +286,7 @@ pub struct Destination {
 #[serde(rename_all = "camelCase")]
 pub struct Output {
     /// An optional exhaustive list of actions producing this output
-    pub apply_to: Option<String>,
+    pub apply_to: Option<Vec<String>>,
     /// The name of a definition that describes the schema structure of this output
     pub definition: String,
     /// Human-readable description of this output

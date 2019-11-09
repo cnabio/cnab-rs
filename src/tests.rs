@@ -9,14 +9,14 @@ fn test_bundle_simple() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0"
     }"#
     .parse()
     .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 }
@@ -27,7 +27,7 @@ fn test_bundle_keywords() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "keywords": ["a", "b", "c"]
     }"#
@@ -35,7 +35,7 @@ fn test_bundle_keywords() {
     .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 
@@ -51,7 +51,7 @@ fn test_bundle_actions() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "actions": {
             "my_action": {
@@ -82,7 +82,7 @@ fn test_bundle_parameters() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "parameters": {
             "arg1": {
@@ -120,7 +120,7 @@ fn test_bundle_parameters() {
     .expect("parsed bundle");
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(
         &bun.definitions
@@ -196,7 +196,7 @@ fn test_bundle_outputs() {
         "version": "1.0.0",
         "outputs": {
           "first": {
-            "applyTo": "example",
+            "applyTo": ["example"],
             "definition": "somedef",
             "description": "does stuff",
             "path": "/var/run/hello"
@@ -222,7 +222,7 @@ fn test_bundle_outputs() {
         .expect("outputs")
         .get("first")
         .expect("first");
-    assert_that(&first.apply_to.as_ref().expect("applyTo")).is_equal_to(&"example".to_string());
+    assert_that(&first.apply_to.as_ref().expect("applyTo")[0]).is_equal_to(&"example".to_string());
     assert_that(&first.definition).is_equal_to(&"somedef".to_string());
     assert_that(&first.path.as_ref().expect("path buffer")).is_equal_to(&PathBuf::from("/var/run/hello"));
     assert_that(&first.description.as_ref().expect("description"))
@@ -262,7 +262,7 @@ fn test_bundle_credentials() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "credentials": {
             "mytoken": {
@@ -335,7 +335,7 @@ fn test_bundle_images() {
                 "size": 1234567890
             }
         ],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "labels": ["hello", "world"]
     }"#
@@ -343,7 +343,7 @@ fn test_bundle_images() {
     .expect("bundle is unwrapped");
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
 
     // Check that all of the fields unmarshaled correctly.
@@ -389,7 +389,7 @@ fn test_bundle_deserialize() {
     let bun = Bundle::from_file("testdata/bundle.json").expect("parse testdata/bundle.json");
 
     assert_that(&bun.name).is_equal_to("helloworld".to_string());
-    assert_that(&bun.schema_version).is_equal_to("v1.0.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("v1.0.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(0, 1, 2));
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
