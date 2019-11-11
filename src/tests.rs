@@ -1,7 +1,7 @@
 use crate::cnab::*;
 use semver::Version;
-use serde_json::*;
 use spectral::prelude::*;
+use std::path::PathBuf;
 
 #[test]
 // Testing that we can build one with only the minimal fields.
@@ -9,14 +9,14 @@ fn test_bundle_simple() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0"
     }"#
     .parse()
     .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 }
@@ -27,7 +27,7 @@ fn test_bundle_keywords() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "keywords": ["a", "b", "c"]
     }"#
@@ -35,7 +35,7 @@ fn test_bundle_keywords() {
     .unwrap();
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
     assert_that(&bun.invocation_images.len()).is_equal_to(&0);
 
@@ -51,7 +51,7 @@ fn test_bundle_actions() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "actions": {
             "my_action": {
@@ -69,7 +69,7 @@ fn test_bundle_actions() {
     let action_map = actions.unwrap();
     let my_action = &action_map.get(&"my_action".to_string());
     assert_that(&my_action.is_some());
-    assert_that(&my_action.unwrap()).is_equal_to(&Action{
+    assert_that(&my_action.unwrap()).is_equal_to(&Action {
         description: Option::from("a custom action".to_string()),
         modifies: true,
         stateless: true,
@@ -82,33 +82,24 @@ fn test_bundle_parameters() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "parameters": {
             "arg1": {
+                "description": "this is a description",
                 "destination": {
                     "env": "FIRST"
                 },
-                "defaultValue": 1234,
-                "exclusiveMinimum": 123,
-                "exclusiveMaximum": 567789,
+                "definition": "somedef",
                 "metadata": {
                     "description": "a parameter"
-                },
-                "type": "int"
+                }
             },
             "arg2": {
                 "destination": {
                     "path": "/path/to/num"
                 },
-                "defaultValue": 1234,
-                "minimum": 123,
-                "maximum": 567789,
-                "metadata": {
-                    "description": "a parameter"
-                },
-                "required": true,
-                "type": "int"
+                "required": true
             },
             "arg3": {
                 "applyTo": ["uninstall"],
@@ -116,54 +107,45 @@ fn test_bundle_parameters() {
                     "env": "LETTERS",
                     "path": "/path/to/abc"
                 },
-                "defaultValue": "abc",
-                "enum": ["a", "ab", "abc"],
-                "minLength": 1,
-                "maxLength": 5,
-                "metadata": {
-                    "description": "a parameter"
-                },
-                "pattern": "[a-z]+",
-                "required": true,
+                "required": true
+            }
+        },
+        "definitions": {
+            "somedef": {
                 "type": "string"
             }
         }
     }"#
     .parse()
-    .unwrap();
+    .expect("parsed bundle");
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
+    assert_that(
+        &bun.definitions
+            .expect("definitions")
+            .get(&"somedef".to_string()),
+    )
+    .is_some();
 
-    let params = bun.parameters.unwrap();
+    let params = bun.parameters.expect("params");
     assert_that(&params.len()).is_equal_to(&3);
 
     // Arg 1 tests
     {
-        let arg1 = params.get(&"arg1".to_string());
-        assert_that(&arg1).is_some();
+        let arg1 = params.get(&"arg1".to_string()).expect("arg1 exists");
 
         // required should be set to false by default
-        assert_that(&arg1.unwrap().required).is_false();
+        assert!(&arg1.required.is_none());
 
         // Destination should have just env
-        assert_that(&arg1.unwrap().destination.env.as_ref())
+        assert_that(&arg1.destination.env.as_ref())
             .is_some()
             .is_equal_to(&"FIRST".to_string());
-        assert_that(&arg1.unwrap().destination.path).is_none();
-
-        // Test exclusive_min/max
-        assert_that(&arg1.unwrap().exclusive_minimum)
-            .is_some()
-            .is_equal_to(&123);
-        assert_that(&arg1.unwrap().exclusive_maximum)
-            .is_some()
-            .is_equal_to(&567789);
-
-        // Sanity check that min and max are none.
-        assert_that(&arg1.unwrap().minimum).is_none();
-        assert_that(&arg1.unwrap().maximum).is_none();
+        assert_that(&arg1.destination.path).is_none();
+        assert_that(&arg1.description).is_equal_to(Some("this is a description".into()));
+        assert_that(&arg1.definition).is_equal_to(Some("somedef".into()));
     }
 
     // Arg 2 tests
@@ -172,7 +154,7 @@ fn test_bundle_parameters() {
         assert_that(&arg2).is_some();
 
         // required should be set to true
-        assert_that(&arg2.unwrap().required).is_true();
+        assert!(&arg2.expect("arg2").required.expect("required"));
 
         // Destination should have just path
         let destination = &arg2.unwrap().destination;
@@ -180,26 +162,12 @@ fn test_bundle_parameters() {
         assert_that(&destination.path)
             .is_some()
             .is_equal_to("/path/to/num".parse::<std::path::PathBuf>().unwrap());
-
-        // Test min/max
-        assert_that(&arg2.unwrap().minimum)
-            .is_some()
-            .is_equal_to(&123);
-        assert_that(&arg2.unwrap().maximum)
-            .is_some()
-            .is_equal_to(&567789);
-
-        // Sanity check that exclusive min and max are none.
-        assert_that(&arg2.unwrap().exclusive_minimum).is_none();
-        assert_that(&arg2.unwrap().exclusive_maximum).is_none();
     }
-
     // Arg 3 tests
     {
         let arg3 = params.get(&"arg3".to_string());
 
         assert!(arg3.is_some());
-        assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
 
         let apply = &arg3.unwrap().apply_to;
         assert!(apply.is_some());
@@ -213,33 +181,52 @@ fn test_bundle_parameters() {
             .is_some()
             .is_equal_to("/path/to/abc".parse::<std::path::PathBuf>().unwrap());
 
-        let abc = json!("abc");
-        let dv = &arg3.unwrap().default_value;
-        assert_that(dv).is_equal_to(&Some(abc));
-
-        let allowed = &arg3.unwrap().allowed_values;
-        assert_that(allowed).is_equal_to(&Some(vec![json!("a"), json!("ab"), json!("abc")]));
-
-        assert_that(&arg3.as_ref().unwrap().min_length)
-            .is_some()
-            .is_equal_to(1);
-        assert_that(&arg3.as_ref().unwrap().max_length)
-            .is_some()
-            .is_equal_to(5);
-        assert_that(&arg3.as_ref().unwrap().pattern).is_equal_to(&Some("[a-z]+".to_string()));
-        assert_that(&arg3.unwrap().required).is_true();
-
-        let meta = &arg3.as_ref().unwrap().metadata;
-        assert_that(&meta.as_ref()).is_some();
-
-        assert_that(&meta.as_ref().unwrap().description.as_ref())
-            .is_some()
-            .is_equal_to(&"a parameter".to_string());
-
         let apply_to = &arg3.unwrap().apply_to;
         assert_that(apply_to).is_equal_to(&Some(vec!["uninstall".to_string()]));
-        assert_that(&arg3.unwrap().parameter_type).is_equal_to("string".to_string());
     }
+}
+
+// Test custom data
+#[test]
+fn test_bundle_outputs() {
+    let bun: Bundle = r#"{
+        "name": "aristotle",
+        "invocationImages": [],
+        "schemaVersion": "1.0.0",
+        "version": "1.0.0",
+        "outputs": {
+          "first": {
+            "applyTo": ["example"],
+            "definition": "somedef",
+            "description": "does stuff",
+            "path": "/var/run/hello"
+          },
+          "second": {
+              "path": "/var/run/empty",
+              "definition": "somedef"
+          }
+        },
+        "definitions": {
+            "somedef": {
+                "type": "string"
+            }
+        }
+    }"#
+    .parse()
+    .expect("bundle parsed");
+
+    assert_that(&bun.outputs.as_ref().expect("outputs").len()).is_equal_to(2);
+    let first = bun
+        .outputs
+        .as_ref()
+        .expect("outputs")
+        .get("first")
+        .expect("first");
+    assert_that(&first.apply_to.as_ref().expect("applyTo")[0]).is_equal_to(&"example".to_string());
+    assert_that(&first.definition).is_equal_to(&"somedef".to_string());
+    assert_that(&first.path.as_ref().expect("path buffer")).is_equal_to(&PathBuf::from("/var/run/hello"));
+    assert_that(&first.description.as_ref().expect("description"))
+        .is_equal_to(&"does stuff".to_string());
 }
 
 // Test custom data
@@ -275,7 +262,7 @@ fn test_bundle_credentials() {
     let bun: Bundle = r#"{
         "name": "aristotle",
         "invocationImages": [],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "credentials": {
             "mytoken": {
@@ -345,22 +332,18 @@ fn test_bundle_images() {
                 "image": "nginx:latest",
                 "imageType": "oci",
                 "mediaType": "application/x-image-thinger",
-                "platform": {
-                    "os": "linux",
-                    "arch": "amd64"
-                },
                 "size": 1234567890
             }
         ],
-        "schemaVersion": "1.0-WD",
+        "schemaVersion": "1.0",
         "version": "1.0.0",
         "labels": ["hello", "world"]
     }"#
     .parse()
-    .unwrap();
+    .expect("bundle is unwrapped");
 
     assert_that(&bun.name).is_equal_to("aristotle".to_string());
-    assert_that(&bun.schema_version).is_equal_to("1.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("1.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(1, 0, 0));
 
     // Check that all of the fields unmarshaled correctly.
@@ -371,24 +354,22 @@ fn test_bundle_images() {
         assert_that(&ii1.image).is_equal_to("nginx:latest".to_string());
         assert_that(&ii1.image_type).is_equal_to(Some("oci".to_string()));
         assert_that(&ii1.media_type).is_equal_to(Some("application/x-image-thinger".to_string()));
-        assert_that(&ii1.size).is_equal_to(Some(1234567890));
-        assert_that(&ii1.platform.as_ref().unwrap().os).is_equal_to(Some("linux".to_string()));
-        assert_that(&ii1.platform.as_ref().unwrap().arch).is_equal_to(Some("amd64".to_string()));
+        assert_that(&ii1.size).is_equal_to(Some(1_234_567_890));
     }
 
     let imgs = &bun.images.as_ref();
-    assert_that(&imgs.unwrap().len()).is_equal_to(1);
+    assert_that(&imgs.expect("image").len()).is_equal_to(1);
     {
         let img = &bun
             .images
             .as_ref()
-            .unwrap()
+            .expect("at least one image")
             .get(&"web".to_string())
-            .unwrap();
+            .expect("web");
         assert_that(&img.image).is_equal_to("nginx:latest".to_string());
         assert_that(&img.image_type).is_equal_to(Some("oci".to_string()));
         assert_that(&img.media_type).is_equal_to(Some("application/x-image-thinger".to_string()));
-        assert_that(&img.size).is_equal_to(Some(1234567890));
+        assert_that(&img.size).is_equal_to(Some(1_234_567_890));
         assert_that(&img.platform.as_ref().unwrap().os).is_equal_to(Some("linux".to_string()));
         assert_that(&img.platform.as_ref().unwrap().arch).is_equal_to(Some("amd64".to_string()));
     }
@@ -405,10 +386,10 @@ fn test_bundle_parse_error() {
 // Test loading a bundle from a file
 #[test]
 fn test_bundle_deserialize() {
-    let bun = Bundle::from_file("testdata/bundle.json").unwrap();
+    let bun = Bundle::from_file("testdata/bundle.json").expect("parse testdata/bundle.json");
 
     assert_that(&bun.name).is_equal_to("helloworld".to_string());
-    assert_that(&bun.schema_version).is_equal_to("v1.0.0-WD".to_string());
+    assert_that(&bun.schema_version).is_equal_to("v1.0.0".to_string());
     assert_that(&bun.version).is_equal_to(Version::new(0, 1, 2));
     assert_that(&bun.maintainers.unwrap().len()).is_equal_to(&1);
     assert_that(&bun.custom.unwrap().len()).is_equal_to(&2);
