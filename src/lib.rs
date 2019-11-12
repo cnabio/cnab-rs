@@ -3,6 +3,11 @@
 
 mod cnab;
 pub use crate::cnab::*;
+mod claim;
+pub use crate::claim::*;
+
+// Re-export Ulid for convenience
+pub use ulid::Ulid;
 
 #[cfg(test)]
 mod tests;

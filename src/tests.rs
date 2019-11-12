@@ -224,7 +224,8 @@ fn test_bundle_outputs() {
         .expect("first");
     assert_that(&first.apply_to.as_ref().expect("applyTo")[0]).is_equal_to(&"example".to_string());
     assert_that(&first.definition).is_equal_to(&"somedef".to_string());
-    assert_that(&first.path.as_ref().expect("path buffer")).is_equal_to(&PathBuf::from("/var/run/hello"));
+    assert_that(&first.path.as_ref().expect("path buffer"))
+        .is_equal_to(&PathBuf::from("/var/run/hello"));
     assert_that(&first.description.as_ref().expect("description"))
         .is_equal_to(&"does stuff".to_string());
 }
