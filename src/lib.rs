@@ -11,3 +11,6 @@ pub use ulid::Ulid;
 
 #[cfg(test)]
 mod tests;
+
+mod credentialset;
+pub use crate::credentialset::*;
