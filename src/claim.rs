@@ -26,6 +26,11 @@ pub struct Claim {
     pub result: Response,
     /// A ulid to track the revision
     pub revision: String,
+    /// A canonical reference to the bundle used in the last action.
+    /// When provided, the bundle reference SHOULD be digested to identify a specific version of
+    /// the referenced bundle.
+    pub bundle_reference: Option<String>,
+
 }
 
 /// Response represents the result of a CNAB operation, as described in a Claim.
@@ -60,6 +65,7 @@ mod test {
                         }
                     }
                 },
+                "bundleReference": "hub.example.com/my/bundle@sha256:eeeeeeeee...",
                 "created": "2018-08-30T20:39:55.549002887-06:00",
                 "modified": "2018-08-30T20:39:55.549002887-06:00",
                 "result": {
