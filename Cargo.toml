@@ -7,7 +7,7 @@ edition = "2018"
 description = "A Rust implementation of CNAB Core 1.0 final draft"
 homepage = "https://cnab.io"
 readme = "README.md"
-repository = "https://github.com/deislabs/libcnab-rust"
+repository = "https://github.com/cnabio/cnab-rs"
 keywords = ["cnab"]
 
 [badges]
