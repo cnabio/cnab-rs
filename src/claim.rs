@@ -30,7 +30,6 @@ pub struct Claim {
     /// When provided, the bundle reference SHOULD be digested to identify a specific version of
     /// the referenced bundle.
     pub bundle_reference: Option<String>,
-
 }
 
 /// Response represents the result of a CNAB operation, as described in a Claim.
@@ -41,8 +40,16 @@ pub struct Claim {
 pub struct Response {
     action: String,
     message: Option<String>,
-    /// The specification is less than clear over whether statuses are fixed, or if custom statuses may be used.
-    status: String,
+    status: Status,
+}
+
+/// Status is one of 'success', 'failure', or 'pending'
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum Status {
+    Success,
+    Failure,
+    Pending,
 }
 
 #[cfg(test)]
@@ -51,7 +58,7 @@ mod test {
 
     #[test]
     fn test_claim() {
-        let _: Claim = serde_json::from_str(
+        let claim: Claim = serde_json::from_str(
             r#"{
                 "name": "claimtest",
                 "bundle": {
@@ -85,5 +92,7 @@ mod test {
             }"#,
         )
         .expect("Successfully parsed claim");
+
+        assert_eq!(claim.result.status, Status::Success);
     }
 }
